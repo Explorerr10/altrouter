@@ -9,6 +9,7 @@ from ..auth.sessions import SESSION_COOKIE, SessionManager
 from ..auth.users import UsersStore
 from ..config import APP_VERSION
 from ..monitor import clients as clients_mod
+from ..monitor.acc import AccCollector
 from ..monitor import net as net_mod
 from ..monitor import system as system_mod
 from ..monitor.stats import StatsCollector
@@ -25,6 +26,7 @@ def build_api_router(
     config_dir,
 ) -> APIRouter:
     api = APIRouter()
+    acc = AccCollector(config_dir)
 
     @api.get("/health")
     async def health() -> dict:
@@ -40,7 +42,7 @@ def build_api_router(
 
     @api.get("/clients")
     def clients(_session=Depends(require_session)) -> list:
-        return clients_mod.clients_snapshot()
+        return acc.enrich(clients_mod.clients_snapshot())
 
     @api.websocket("/ws/stats")
     async def ws_stats(websocket: WebSocket) -> None:

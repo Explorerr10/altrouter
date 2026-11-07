@@ -253,6 +253,10 @@ onBeforeUnmount(() => {
             <th>{{ t('col.mac') }}</th>
             <th>{{ t('col.iface') }}</th>
             <th>{{ t('col.status') }}</th>
+            <th>{{ t('col.rx') }}</th>
+            <th>{{ t('col.tx') }}</th>
+            <th>{{ t('col.rxTotal') }}</th>
+            <th>{{ t('col.txTotal') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -277,9 +281,21 @@ onBeforeUnmount(() => {
               />
               {{ client.active ? t('common.active') : t('common.inactive') }}
             </td>
+            <td class="mono">
+              {{ formatRate(client.rx_bps) }}
+            </td>
+            <td class="mono">
+              {{ formatRate(client.tx_bps) }}
+            </td>
+            <td class="mono">
+              {{ formatBytes(client.rx_total) }}
+            </td>
+            <td class="mono">
+              {{ formatBytes(client.tx_total) }}
+            </td>
           </tr>
           <tr v-if="!clients.length">
-            <td colspan="5">
+            <td colspan="9">
               {{ t('dash.noClients') }}
             </td>
           </tr>
