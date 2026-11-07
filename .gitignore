@@ -1,0 +1,26 @@
+# секреты и ключи
+*.key
+*.pem
+id_ed25519*
+.env
+*.local
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# node
+node_modules/
+frontend/dist/
+
+# служебное
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.tar.gz
+*.log
