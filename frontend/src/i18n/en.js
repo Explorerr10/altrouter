@@ -419,6 +419,7 @@ export default {
   'err.diag_failed': 'Diagnostics error',
   'err.logs_failed': 'Failed to read the log',
   'err.ssh_failed': 'SSH configuration error',
+  'err.root_key_forbidden': 'Adding an SSH key for root is not allowed',
   'err.tls_failed': 'Failed to install the TLS certificate',
   'err.updates_failed': 'System update error',
   'err.power_failed': 'Power management error',

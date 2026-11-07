@@ -212,7 +212,7 @@ async function loadAccess() {
         name: s.name,
         subnet: netOf(s.address),
       }))
-      sshUsers.value = await api.get('/system/ssh/users')
+      sshUsers.value = (await api.get('/system/ssh/users')).filter((u) => u.username !== 'root')
       if (!sshUsers.value.some((u) => u.username === sshKeyUser.value)) {
         sshKeyUser.value = sshUsers.value[0]?.username || ''
       }

@@ -284,6 +284,8 @@ def build_system_router(
 
     @router.put("/ssh/keys")
     def ssh_key_add(body: SshKeyIn, session: Session = Depends(require_admin)) -> dict:
+        if body.user == "root":
+            raise _http(400, "SSH-ключ для root добавлять нельзя", "root_key_forbidden")
         if not ssh_user_exists(body.user):
             raise _http(404, f"Пользователь {body.user!r} не найден", "user_not_found")
         try:

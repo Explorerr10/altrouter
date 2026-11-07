@@ -137,7 +137,11 @@ def test_ssh_config(env, monkeypatch):
 
 def test_ssh_keys(env, monkeypatch):
     client, _ = env
-    monkeypatch.setattr(service, "ssh_users", lambda: [{"username": "root", "uid": 0}])
+    monkeypatch.setattr(
+        service,
+        "ssh_users",
+        lambda: [{"username": "root", "uid": 0}, {"username": "linadmin", "uid": 1000}],
+    )
     monkeypatch.setattr(
         service,
         "ssh_keys_list",
@@ -150,6 +154,9 @@ def test_ssh_keys(env, monkeypatch):
     ]
     assert client.put(
         "/api/system/ssh/keys", json={"user": "root", "key": "ssh-ed25519 AAAA test"}
+    ).status_code == 400
+    assert client.put(
+        "/api/system/ssh/keys", json={"user": "linadmin", "key": "ssh-ed25519 AAAA test"}
     ).json() == {"ok": True, "fingerprint": "FP"}
     assert client.delete("/api/system/ssh/keys/root/1").status_code == 200
     assert client.get("/api/system/ssh/keys", params={"user": "nobody"}).status_code == 404

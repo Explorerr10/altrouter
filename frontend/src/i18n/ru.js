@@ -419,6 +419,7 @@ export default {
   'err.diag_failed': 'Ошибка диагностики',
   'err.logs_failed': 'Не удалось получить журнал',
   'err.ssh_failed': 'Ошибка настройки SSH',
+  'err.root_key_forbidden': 'SSH-ключ для root добавлять нельзя',
   'err.tls_failed': 'Ошибка установки TLS-сертификата',
   'err.updates_failed': 'Ошибка обновления системы',
   'err.power_failed': 'Ошибка управления питанием',
