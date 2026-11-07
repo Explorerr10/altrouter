@@ -245,6 +245,12 @@ table.data.fixed {
   table-layout: fixed;
 }
 
+table.data.fixed th,
+table.data.fixed td {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
 table.data.fixed td {
   overflow: hidden;
   text-overflow: ellipsis;
