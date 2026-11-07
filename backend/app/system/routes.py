@@ -85,6 +85,10 @@ class TlsIn(BaseModel):
     key: str
 
 
+class TlsGenerateIn(BaseModel):
+    hosts: list[str] = Field(min_length=1, max_length=64)
+
+
 class AccessIn(BaseModel):
     management_only: bool
 
@@ -318,6 +322,16 @@ def build_system_router(
         except SystemError as e:
             raise _http(400, str(e), "tls_failed") from e
         log("tls_updated", session)
+        return {"ok": True, "need_restart": True}
+
+    @router.post("/tls/generate")
+    def tls_generate(body: TlsGenerateIn, session: Session = Depends(require_admin)) -> dict:
+        cert_path, key_path = service.tls_paths()
+        try:
+            service.tls_generate(body.hosts, cert_path, key_path)
+        except SystemError as e:
+            raise _http(400, str(e), "tls_failed") from e
+        log("tls_generated", session, hosts=body.hosts)
         return {"ok": True, "need_restart": True}
 
     @router.get("/access")

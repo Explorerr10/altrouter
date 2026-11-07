@@ -1,5 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
+from pathlib import Path
 
 import app.system.service as service
 from app.main import create_app
@@ -178,6 +179,27 @@ def test_tls(env):
     client, _ = env
     assert "error" in client.get("/api/system/tls").json()
     assert client.put("/api/system/tls", json={"cert": "x", "key": "y"}).status_code == 400
+
+
+def test_tls_generate(env, monkeypatch):
+    client, cfg = env
+    cert, key = cfg / "certs" / "altrouter.crt", cfg / "certs" / "altrouter.key"
+    calls = []
+
+    def fake_run(args, timeout):
+        calls.append(args)
+        Path(args[args.index("-keyout") + 1]).touch()
+        Path(args[args.index("-out") + 1]).touch()
+        return ""
+
+    monkeypatch.setattr(service, "run_checked", fake_run)
+    monkeypatch.setattr(service.ssl.SSLContext, "load_cert_chain", lambda *a: None)
+    assert client.post("/api/system/tls/generate", json={"hosts": []}).status_code == 422
+    assert client.post("/api/system/tls/generate", json={"hosts": ["bad host!"]}).status_code == 400
+    body = {"hosts": ["192.168.1.1", " router.lan ", ""]}
+    assert client.post("/api/system/tls/generate", json=body).json() == {"ok": True, "need_restart": True}
+    assert cert.exists() and key.exists()
+    assert "subjectAltName=IP:192.168.1.1,DNS:router.lan" in calls[0]
 
 
 def test_management_only_access(env):

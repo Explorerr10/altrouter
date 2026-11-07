@@ -39,6 +39,7 @@ const sshKeyNew = ref('')
 const tls = ref({})
 const tlsCert = ref('')
 const tlsKey = ref('')
+const tlsHosts = ref('')
 const tlsMsg = ref('')
 const mgmtOnly = ref(false)
 const mgmtIface = ref('')
@@ -293,6 +294,19 @@ async function applyTls() {
     tlsKey.value = ''
     tls.value = await api.get('/system/tls')
     tlsMsg.value = t('mgmt.tlsOk')
+  } catch (e) {
+    tlsMsg.value = e.message
+  }
+}
+
+async function generateTls() {
+  tlsMsg.value = ''
+  try {
+    await api.post('/system/tls/generate', {
+      hosts: tlsHosts.value.split(/[\s,;]+/).filter(Boolean),
+    })
+    tls.value = await api.get('/system/tls')
+    tlsMsg.value = t('mgmt.tlsGenOk')
   } catch (e) {
     tlsMsg.value = e.message
   }
@@ -769,6 +783,20 @@ onMounted(() => {
               @click="applyTls"
             >
               {{ t('mgmt.installCert') }}
+            </button>
+          </div>
+          <div class="row">
+            <textarea
+              v-model="tlsHosts"
+              rows="2"
+              :placeholder="t('mgmt.phGenHosts')"
+            />
+            <button
+              class="btn"
+              :disabled="!tlsHosts.trim()"
+              @click="generateTls"
+            >
+              {{ t('mgmt.genCert') }}
             </button>
           </div>
           <p

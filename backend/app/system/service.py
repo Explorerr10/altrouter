@@ -266,6 +266,42 @@ def tls_set(cert_pem: str, key_pem: str, cert_path: Path, key_path: Path) -> Non
             Path(path).unlink(missing_ok=True)
 
 
+def tls_generate(hosts: list[str], cert_path: Path, key_path: Path) -> None:
+    sans = []
+    for host in hosts:
+        host = host.strip()
+        if not host:
+            continue
+        try:
+            sans.append("IP:" + str(ipaddress.ip_address(host)))
+        except ValueError:
+            if not SAFE_HOST.match(host):
+                raise SystemError(f"Некорректный адрес: {host!r}")
+            sans.append("DNS:" + host)
+    if not sans:
+        raise SystemError("Не указан ни один адрес")
+    cert_path.parent.mkdir(parents=True, exist_ok=True)
+    fd_cert, tmp_cert = tempfile.mkstemp(dir=cert_path.parent, suffix=".crt")
+    fd_key, tmp_key = tempfile.mkstemp(dir=cert_path.parent, suffix=".key")
+    os.close(fd_cert)
+    os.close(fd_key)
+    try:
+        run_checked(["/usr/bin/openssl", "req", "-x509", "-newkey", "rsa:2048", "-sha256",
+                     "-days", "3650", "-nodes", "-keyout", tmp_key, "-out", tmp_cert,
+                     "-subj", "/CN=altrouter", "-addext", "subjectAltName=" + ",".join(sans)], 30)
+        ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        try:
+            ctx.load_cert_chain(tmp_cert, tmp_key)
+        except (ssl.SSLError, ValueError, OSError) as e:
+            raise SystemError(f"Сгенерированная пара не принята: {e}") from e
+        os.chmod(tmp_key, 0o600)
+        os.replace(tmp_cert, cert_path)
+        os.replace(tmp_key, key_path)
+    finally:
+        for path in (tmp_cert, tmp_key):
+            Path(path).unlink(missing_ok=True)
+
+
 def backup_pack(config_dir: Path) -> bytes:
     buf = io.BytesIO()
     with tarfile.open(fileobj=buf, mode="w:gz") as tar:
