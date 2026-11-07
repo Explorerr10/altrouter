@@ -11,6 +11,7 @@ const DYNAMIC_CODES = new Set([
   'network_invalid', 'txn_conflict', 'apply_failed', 'rollback_failed', 'wg_keys_failed',
   'wg_render_failed', 'user_invalid', 'backup_invalid', 'diag_failed', 'logs_failed',
   'ssh_failed', 'tls_failed', 'updates_failed', 'power_failed', 'validation_error',
+  'mgmt_protected', 'link_failed',
 ])
 
 function rawDetail(body) {

@@ -118,6 +118,7 @@ export default {
   'net.fact': '(actual)',
   'net.mgmtLocked': 'Management interface cannot be changed',
   'net.noIfaces': 'No interfaces found',
+  'net.linkDownAsk': 'Disable interface {n}?',
   'net.hint1': 'WAN role — provider uplink, LAN — local segment.',
   'net.hint2': 'Interface {n} serves the panel and SSH; its settings cannot be changed.',
   'net.hint3': 'Changes are applied with a safety net: without confirmation the panel reverts the previous settings itself.',
@@ -424,4 +425,6 @@ export default {
   'err.updates_failed': 'System update error',
   'err.power_failed': 'Power management error',
   'err.validation_error': 'Invalid form data',
+  'err.mgmt_protected': 'The management interface cannot be disabled',
+  'err.link_failed': 'Failed to change the interface state',
 }

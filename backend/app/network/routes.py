@@ -13,6 +13,7 @@ from ..errors import ApiError
 from . import wireguard as wg_mod
 from .errors import ApplyError, NetworkError
 from .firewall import DnsRecord, FirewallRule, PortForward
+from .linkstate import LinkError, link_set
 from .manager import InterfaceManager
 from .models import InterfaceConfig
 from .segments import SegmentConfig, StaticRoute, WanConfig, WanPolicy
@@ -21,6 +22,10 @@ from .wireguard import WireguardInterface
 
 class InterfacesPayload(BaseModel):
     items: dict[str, InterfaceConfig]
+
+
+class LinkPayload(BaseModel):
+    up: bool
 
 
 class SegmentsPayload(BaseModel):
@@ -94,6 +99,19 @@ def build_network_router(manager: InterfaceManager) -> APIRouter:
         except NetworkError as e:
             raise ApiError(400, "network_invalid", str(e)) from e
         return await run_apply(manager,{"items": body.items}, session.username)
+
+    @router.put("/interfaces/{name}/link")
+    async def set_link(
+        name: str, body: LinkPayload, session: Session = Depends(require_admin)
+    ) -> dict:
+        if name == manager.mgmt:
+            raise ApiError(400, "mgmt_protected", "Управляющий интерфейс нельзя отключать")
+        try:
+            await asyncio.to_thread(link_set, name, body.up)
+        except LinkError as e:
+            raise ApiError(400, "link_failed", str(e)) from e
+        manager.journal_entry("link_state_changed", session.username, iface=name, up=body.up)
+        return {"ok": True, "name": name, "up": body.up}
 
     @router.put("/segments")
     async def update_segments(

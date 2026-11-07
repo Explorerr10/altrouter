@@ -21,6 +21,7 @@ log() { echo "install: $*"; }
 [ -f "$SRC/deploy/sudoers.altrouter" ] || die "$SRC/deploy/sudoers.altrouter не найден"
 [ -f "$SRC/deploy/altrouter-netapply.sh" ] || die "$SRC/deploy/altrouter-netapply.sh не найден"
 [ -f "$SRC/deploy/altrouter-ssh.sh" ] || die "$SRC/deploy/altrouter-ssh.sh не найден"
+[ -f "$SRC/deploy/altrouter-ifstate.sh" ] || die "$SRC/deploy/altrouter-ifstate.sh не найден"
 [ -f "$SRC/deploy/sysctl-altrouter.conf" ] || die "$SRC/deploy/sysctl-altrouter.conf не найден"
 grep -qi debian /etc/os-release || log "WARNING: ОС не Debian — скрипт рассчитан на Debian 13"
 
@@ -178,6 +179,7 @@ visudo -cf "$SRC/deploy/sudoers.altrouter" >/dev/null
 install -m 440 -o root -g root "$SRC/deploy/sudoers.altrouter" /etc/sudoers.d/altrouter
 install -m 755 -o root -g root "$SRC/deploy/altrouter-netapply.sh" /usr/local/sbin/altrouter-netapply
 install -m 755 -o root -g root "$SRC/deploy/altrouter-ssh.sh" /usr/local/sbin/altrouter-ssh
+install -m 755 -o root -g root "$SRC/deploy/altrouter-ifstate.sh" /usr/local/sbin/altrouter-ifstate
 # IP-форвардинг обязателен для NAT/маршрутизации сегментов; sysctl.d — персистентно.
 install -m 644 -o root -g root "$SRC/deploy/sysctl-altrouter.conf" /etc/sysctl.d/90-altrouter.conf
 sysctl -p /etc/sysctl.d/90-altrouter.conf >/dev/null

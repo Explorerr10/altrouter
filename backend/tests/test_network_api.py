@@ -2,6 +2,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.main import create_app
+from app.network import linkstate
+from app.network import routes as network_routes
 from app.network.manager import InterfaceManager
 
 
@@ -326,3 +328,44 @@ def test_dns_rejects_foreign_ip(env):
     resp = client.put("/api/network/dns", json={"records": [{"hostname": "nas", "ip": "8.8.8.8"}]})
     assert resp.status_code == 400
     assert "не входит ни в одну известную подсеть" in resp.json()["detail"]
+
+
+# ---------- этап 5: вкл/выкл интерфейса ----------
+
+
+def test_link_up_down(env, monkeypatch):
+    client, _ = env
+    calls = []
+    monkeypatch.setattr(network_routes, "link_set", lambda name, up: calls.append((name, up)))
+    resp = client.put("/api/network/interfaces/enp5s0/link", json={"up": False})
+    assert resp.status_code == 200
+    assert resp.json() == {"ok": True, "name": "enp5s0", "up": False}
+    resp = client.put("/api/network/interfaces/enp5s0/link", json={"up": True})
+    assert resp.status_code == 200
+    assert calls == [("enp5s0", False), ("enp5s0", True)]
+
+
+def test_link_rejects_mgmt_iface(env, monkeypatch):
+    client, _ = env
+    monkeypatch.setattr(network_routes, "link_set", lambda name, up: None)
+    resp = client.put("/api/network/interfaces/enp9s0f0/link", json={"up": False})
+    assert resp.status_code == 400
+    assert resp.json()["code"] == "mgmt_protected"
+
+
+def test_link_bad_name_returns_link_failed(env, monkeypatch):
+    client, _ = env
+    monkeypatch.setattr(
+        network_routes,
+        "link_set",
+        lambda name, up: (_ for _ in ()).throw(linkstate.LinkError("bad")),
+    )
+    resp = client.put("/api/network/interfaces/enp5s0/link", json={"up": True})
+    assert resp.status_code == 400
+    assert resp.json()["code"] == "link_failed"
+
+
+def test_link_requires_auth(tmp_path):
+    app = create_app(config_dir=tmp_path)
+    client = TestClient(app, base_url="https://testserver")
+    assert client.put("/api/network/interfaces/enp5s0/link", json={"up": False}).status_code == 401

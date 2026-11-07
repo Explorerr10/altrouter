@@ -54,6 +54,19 @@ async function refresh() {
   }
 }
 
+async function toggleLink(row) {
+  if (row.up && !window.confirm(t('net.linkDownAsk', { n: row.name }))) return
+  busy.value = true
+  try {
+    await api.put(`/network/interfaces/${row.name}/link`, { up: !row.up })
+  } catch (err) {
+    error.value = err.message
+  } finally {
+    busy.value = false
+  }
+  await refresh()
+}
+
 function openDialog(row) {
   dialogError.value = ''
   dialog.value = { name: row.name, initial: row.cfg }
@@ -137,6 +150,7 @@ onBeforeUnmount(() => {
             <th>IPv4</th>
             <th>MTU</th>
             <th>{{ t('col.state') }}</th>
+            <th>Link</th>
             <th />
           </tr>
         </thead>
@@ -184,6 +198,20 @@ onBeforeUnmount(() => {
               {{ row.up ? (row.speed_mbps ? t('common.mbps', { n: row.speed_mbps }) : t('common.up')) : t('common.down') }}
             </td>
             <td>
+              <label
+                class="switch"
+                :title="row.management ? t('net.mgmtLocked') : ''"
+              >
+                <input
+                  type="checkbox"
+                  :checked="row.up"
+                  :disabled="busy || row.management"
+                  @change="toggleLink(row)"
+                >
+                <span class="slider" />
+              </label>
+            </td>
+            <td>
               <button
                 class="btn small"
                 :disabled="row.management"
@@ -195,7 +223,7 @@ onBeforeUnmount(() => {
             </td>
           </tr>
           <tr v-if="!rows.length">
-            <td colspan="6">
+            <td colspan="7">
               {{ t('net.noIfaces') }}
             </td>
           </tr>
