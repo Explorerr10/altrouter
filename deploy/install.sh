@@ -25,12 +25,13 @@ log() { echo "install: $*"; }
 grep -qi debian /etc/os-release || log "WARNING: ОС не Debian — скрипт рассчитан на Debian 13"
 
 # ---------- 1. Пошаговые настройки ----------
-DEF_IFACE=$(ip -4 route show default 2>/dev/null | awk '{print $5; exit}')
 DEF_IP=$(hostname -I 2>/dev/null | awk '{print $1}')
 
 PORT="${ALTROUTER_PORT:-9000}"
 BIND="${ALTROUTER_BIND:-0.0.0.0}"
-MGMT_IFACE="${ALTROUTER_MGMT_IFACE:-$DEF_IFACE}"
+# mgmt задаётся только явно: автоопределение по default-route назначало
+# управляющим интерфейс, через который идёт деплой (функция mgmt не задействована).
+MGMT_IFACE="${ALTROUTER_MGMT_IFACE:-}"
 ADMIN_USER="${ALTROUTER_ADMIN_USER:-admin}"
 ADMIN_PASSWORD="${ALTROUTER_ADMIN_PASSWORD:-}"
 CERT_SAN="${ALTROUTER_CERT_SAN:-$DEF_IP}"
@@ -76,6 +77,9 @@ if [ -n "$MGMT_IFACE" ] && ! ip link show "$MGMT_IFACE" >/dev/null 2>&1; then
 fi
 
 log "Порт: $PORT, привязка: $BIND, упр. интерфейс: ${MGMT_IFACE:-не задан}, админ: $ADMIN_USER"
+if [ -z "$MGMT_IFACE" ]; then
+  log "Управляющий интерфейс не задан — функция mgmt отключена (задайте ALTROUTER_MGMT_IFACE при необходимости)"
+fi
 
 # ---------- 2. Системные зависимости (чистая ОС) ----------
 export DEBIAN_FRONTEND=noninteractive
