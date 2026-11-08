@@ -14,7 +14,7 @@ NFT_CONF=/etc/nftables.conf
 
 mkdir -p "$NETD"
 
-find "$NETD" -maxdepth 1 -type f \( -name 'altrouter-*.network' -o -name 'altrouter-*.netdev' \) -delete
+find "$NETD" -maxdepth 1 -type f \( -name 'altrouter-*.network' -o -name 'altrouter-*.netdev' -o -name '10-altrouter.network' \) -delete
 
 if [ -d "$STAGING" ]; then
   for f in "$STAGING"/*.network "$STAGING"/*.netdev; do
